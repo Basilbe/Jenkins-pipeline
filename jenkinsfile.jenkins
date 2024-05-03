@@ -1,102 +1,84 @@
 pipeline {
     agent any
-
+    
     environment {
-        GITHUB_REPO = 'https://github.com/Basilbe/Jenkins-pipeline.git'
+        MAVEN_HOME = 'C:\\Users\\Basil\\Videos\\professional pratice\\apache-maven-3.9.6'
+        PATH = "${MAVEN_HOME}/bin:${env.PATH}"
+        STAGING_SERVER = 'staging.example.com'
+        PRODUCTION_SERVER = 'production.example.com'
     }
-
+    
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: "${env.GITHUB_REPO}"
-            }
-        }
-
         stage('Build') {
             steps {
                 echo 'Stage 1: Build'
-                echo 'Description: Build the code using a build automation tool to compile and package your code.'
-                echo 'Tool: Maven'
-                // Implement your build steps using Maven here
-                sh 'mvn clean package'
+                echo 'Description: Build the code using a build automation tool (e.g., Maven) to compile and package your code.'
+                echo "Tool: Maven (Installed at ${MAVEN_HOME})"
+                // Example build step: sh 'mvn clean package'
             }
         }
-
         stage('Unit and Integration Tests') {
             steps {
                 echo 'Stage 2: Unit and Integration Tests'
-                echo 'Description: Run unit tests to ensure the code functions as expected, and run integration tests to ensure the different components of the application work together as expected.'
-                echo 'Tools: JUnit for unit tests, Selenium for integration tests'
-                // Implement your unit and integration test steps using JUnit and Selenium here
-                sh 'mvn test'
+                echo 'Description: Run unit tests to ensure the code functions as expected and integration tests to ensure different components work together as expected.'
+                echo 'Tool: JUnit, Selenium'
+                // Example test step: sh 'mvn test'
             }
         }
-
         stage('Code Analysis') {
             steps {
                 echo 'Stage 3: Code Analysis'
                 echo 'Description: Integrate a code analysis tool to analyze the code and ensure it meets industry standards.'
-                echo 'Tool: SonarQube'
-                // Implement your code analysis steps using SonarQube here
-                sh 'mvn sonar:sonar'
+                echo 'Tool: SonarQube, Checkstyle'
+                // Example analysis step: sh 'mvn sonar:sonar'
             }
         }
-
         stage('Security Scan') {
             steps {
                 echo 'Stage 4: Security Scan'
                 echo 'Description: Perform a security scan on the code using a tool to identify any vulnerabilities.'
-                echo 'Tool: OWASP ZAP'
-                // Implement your security scan steps using OWASP ZAP here
-                sh 'zap-cli baseline.html -t https://your-app-url'
+                echo 'Tool: OWASP Dependency-Check, SonarQube Security Plugin'
+                // Example security scan step: sh 'mvn dependency-check:check'
             }
         }
-
         stage('Deploy to Staging') {
             steps {
                 echo 'Stage 5: Deploy to Staging'
-                echo 'Description: Deploy the application to a staging server (e.g., AWS EC2 instance).'
-                echo 'Tool: AWS CodeDeploy'
-                // Implement your deployment steps to staging environment using AWS CodeDeploy here
-                sh 'aws deploy create-deployment --application-name my-app --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name staging --s3-location bucket=my-bucket,bundleType=zip,key=my-app.zip'
+                echo "Description: Deploy the application to the staging server (${STAGING_SERVER})."
+                echo 'Tool: AWS CLI, Docker'
+                // Example deployment step: sh "scp target/app.jar user@${STAGING_SERVER}:/path/to/deployment/directory"
             }
         }
-
         stage('Integration Tests on Staging') {
             steps {
                 echo 'Stage 6: Integration Tests on Staging'
-                echo 'Description: Run integration tests on the staging environment to ensure the application functions as expected in a production-like environment.'
-                echo 'Tool: Selenium'
-                // Implement your integration test steps on staging environment using Selenium here
-                sh 'mvn integration-test'
+                echo "Description: Run integration tests on the staging environment (${STAGING_SERVER}) to ensure the application functions as expected in a production-like environment."
+                echo 'Tool: Selenium, Postman'
+                // Example integration test step: sh 'mvn verify'
             }
         }
-
         stage('Deploy to Production') {
             steps {
                 echo 'Stage 7: Deploy to Production'
-                echo 'Description: Deploy the application to a production server (e.g., AWS EC2 instance).'
-                echo 'Tool: AWS CodeDeploy'
-                // Implement your deployment steps to production environment using AWS CodeDeploy here
-                sh 'aws deploy create-deployment --application-name my-app --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name production --s3-location bucket=my-bucket,bundleType=zip,key=my-app.zip'
+                echo "Description: Deploy the application to the production server (${PRODUCTION_SERVER})."
+                echo 'Tool: AWS CLI, Docker'
+                // Example deployment step: sh "scp target/app.jar user@${PRODUCTION_SERVER}:/path/to/deployment/directory"
             }
         }
     }
-
+    
     post {
-        always {
-            emailext (
-                subject: "${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: "${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                to: 'bazil4u5@gmail.com',
-                attachLog: true
-            )
-        }
         success {
-            echo 'Pipeline executed successfully!'
+            emailext body: "Pipeline succeeded! See attached logs for details.",
+                     subject: "Pipeline Success",
+                     to: "bazil4u5@gmail.com",
+                     attachmentsPattern: 'logs/*.txt'
         }
         failure {
-            echo 'Pipeline failed!'
+            emailext body: "Pipeline failed! See attached logs for details.",
+                     subject: "Pipeline Failure",
+                     to: "bazil4u5@gmail.com",
+                     attachmentsPattern: 'logs/*.txt'
         }
     }
 }
