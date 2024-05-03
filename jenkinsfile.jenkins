@@ -1,13 +1,24 @@
 pipeline {
     agent any
 
+    environment {
+        GITHUB_REPO = 'https://github.com/Basilbe/Jenkins-pipeline.git'
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: "${env.GITHUB_REPO}"
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Stage 1: Build'
                 echo 'Description: Build the code using a build automation tool to compile and package your code.'
                 echo 'Tool: Maven'
                 // Implement your build steps using Maven here
+                sh 'mvn clean package'
             }
         }
 
@@ -17,6 +28,7 @@ pipeline {
                 echo 'Description: Run unit tests to ensure the code functions as expected, and run integration tests to ensure the different components of the application work together as expected.'
                 echo 'Tools: JUnit for unit tests, Selenium for integration tests'
                 // Implement your unit and integration test steps using JUnit and Selenium here
+                sh 'mvn test'
             }
         }
 
@@ -26,6 +38,7 @@ pipeline {
                 echo 'Description: Integrate a code analysis tool to analyze the code and ensure it meets industry standards.'
                 echo 'Tool: SonarQube'
                 // Implement your code analysis steps using SonarQube here
+                sh 'mvn sonar:sonar'
             }
         }
 
@@ -35,6 +48,7 @@ pipeline {
                 echo 'Description: Perform a security scan on the code using a tool to identify any vulnerabilities.'
                 echo 'Tool: OWASP ZAP'
                 // Implement your security scan steps using OWASP ZAP here
+                sh 'zap-cli baseline.html -t https://your-app-url'
             }
         }
 
@@ -44,6 +58,7 @@ pipeline {
                 echo 'Description: Deploy the application to a staging server (e.g., AWS EC2 instance).'
                 echo 'Tool: AWS CodeDeploy'
                 // Implement your deployment steps to staging environment using AWS CodeDeploy here
+                sh 'aws deploy create-deployment --application-name my-app --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name staging --s3-location bucket=my-bucket,bundleType=zip,key=my-app.zip'
             }
         }
 
@@ -53,6 +68,7 @@ pipeline {
                 echo 'Description: Run integration tests on the staging environment to ensure the application functions as expected in a production-like environment.'
                 echo 'Tool: Selenium'
                 // Implement your integration test steps on staging environment using Selenium here
+                sh 'mvn integration-test'
             }
         }
 
@@ -62,11 +78,20 @@ pipeline {
                 echo 'Description: Deploy the application to a production server (e.g., AWS EC2 instance).'
                 echo 'Tool: AWS CodeDeploy'
                 // Implement your deployment steps to production environment using AWS CodeDeploy here
+                sh 'aws deploy create-deployment --application-name my-app --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name production --s3-location bucket=my-bucket,bundleType=zip,key=my-app.zip'
             }
         }
     }
 
     post {
+        always {
+            emailext (
+                subject: "${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                to: 'basilbehanan5@gmail.com',
+                attachLog: true
+            )
+        }
         success {
             echo 'Pipeline executed successfully!'
         }
