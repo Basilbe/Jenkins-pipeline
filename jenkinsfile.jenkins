@@ -88,7 +88,7 @@ pipeline {
             emailext (
                 subject: "${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                 body: "${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                to: 'basilbehanan5@gmail.com',
+                to: 'bazil4u5@gmail.com',
                 attachLog: true
             )
         }
